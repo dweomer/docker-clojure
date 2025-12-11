@@ -106,15 +106,15 @@
 
 (def build-tools
   {"lein"       "2.12.0"
-   "tools-deps" "1.12.3.1577"})
+   "tools-deps" "1.12.4.1582"})
 
 (def default-build-tool "tools-deps")
 
 (def installer-hashes
   {"lein"       {"2.11.2" "28a1a62668c5f427b413a8677e376affaa995f023b1fcd06e2d4c98ac1df5f3e"
                  "2.12.0" "12a9c5e3a2471619ca3d64a7462f920fdf713ae8959eb4fcd6257c23332b5aa4"}
-   "tools-deps" {"1.12.2.1571" "14c532e6e2dd760c7bf9d5fdd2044f4ea63e11c9126b89d4e120591352499fff"
-                 "1.12.3.1577" "a55106244ca93ef7b61309e9dca4b248257685870824a8abe2efa706ede8241f"}})
+   "tools-deps" {"1.12.3.1577" "a55106244ca93ef7b61309e9dca4b248257685870824a8abe2efa706ede8241f"
+                 "1.12.4.1582" "0dc6f211d2a737ce6872feb0aa4d1cbbbe72d02665c684f9ad206b88d2e7f4fb"}})
 
 (def exclusions ; don't build these for whatever reason(s)
   #{;; No more jammy builds for JDK 23+
