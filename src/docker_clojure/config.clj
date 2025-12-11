@@ -127,6 +127,9 @@
     ;; Only build amd64 & arm64 architectures for alpine
     {:architecture #(not (#{"amd64" "arm64v8"} %))
      :distro       :alpine/alpine}
+    ;; Alpine w/ Java 8 stopped building correctly and not worth the time to fix
+    {:jdk-version 8
+     :distro      :alpine/alpine}
     ;; ppc64le needs Debian Bookworm or newer
     {:architecture "ppc64le"
      :distro       #(and (-> % namespace (str/starts-with? "debian"))
