@@ -1,6 +1,6 @@
 FROM eclipse-temurin:11-jdk-jammy
 
-ENV CLOJURE_VERSION=1.12.3.1577
+ENV CLOJURE_VERSION=1.12.4.1582
 
 WORKDIR /tmp
 
@@ -10,7 +10,7 @@ apt-get install -y curl make git rlwrap && \
 rm -rf /var/lib/apt/lists/* && \
 curl -fsSLO https://download.clojure.org/install/linux-install-$CLOJURE_VERSION.sh && \
 sha256sum linux-install-$CLOJURE_VERSION.sh && \
-echo "a55106244ca93ef7b61309e9dca4b248257685870824a8abe2efa706ede8241f *linux-install-$CLOJURE_VERSION.sh" | sha256sum -c - && \
+echo "0dc6f211d2a737ce6872feb0aa4d1cbbbe72d02665c684f9ad206b88d2e7f4fb *linux-install-$CLOJURE_VERSION.sh" | sha256sum -c - && \
 chmod +x linux-install-$CLOJURE_VERSION.sh && \
 ./linux-install-$CLOJURE_VERSION.sh && \
 rm linux-install-$CLOJURE_VERSION.sh && \
