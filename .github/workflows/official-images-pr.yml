@@ -12,15 +12,15 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Install babashka
-        uses: DeLaGuardo/setup-clojure@13.4
+        uses: DeLaGuardo/setup-clojure@13.6.0
         with:
-          bb: 1.12.200
+          bb: 1.12.217
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Generate manifest
         run: bb run manifest target/docker.manifest
       - name: Upload manifest artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: manifest
           path: target/docker.manifest
@@ -32,12 +32,12 @@ jobs:
       diff: ${{ steps.manifest-diff.outputs.diff }}
     steps:
       - name: Checkout docker-library/official-images repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: docker-library/official-images
           path: official-images
       - name: Download manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: manifest
       - name: Compare manifest files
@@ -50,11 +50,11 @@ jobs:
     if: contains(needs.compare-manifests.outputs.diff, 'differ')
     steps:
       - name: Download manifest artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: manifest
       - name: Checkout docker-library/official-images repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: docker-library/official-images
           path: official-images
@@ -67,7 +67,7 @@ jobs:
           github-username: ${{ github.actor }}
           token: ${{ secrets.API_TOKEN_GITHUB }}
       - name: Open official-images pull request
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           token: ${{ secrets.API_TOKEN_GITHUB }}
           path: official-images
