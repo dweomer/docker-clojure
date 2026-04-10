@@ -11,7 +11,7 @@ jobs:
     - name: Install babashka
       uses: DeLaGuardo/setup-clojure@13.4
       with:
-        bb: 1.12.200
+        bb: 1.12.217
     - uses: actions/checkout@v4
     - name: Check for stale Dockerfiles
       run: |
