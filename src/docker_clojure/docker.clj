@@ -1,11 +1,13 @@
 (ns docker-clojure.docker
   (:require [clojure.java.shell :refer [sh with-sh-dir]]
+            [clojure.spec.alpha :as s]
             [clojure.string :as str]
             [docker-clojure.config :as cfg]
             [docker-clojure.core :as-alias core]
             [docker-clojure.dockerfile :as df]
+            [docker-clojure.log :refer [log]]
             [docker-clojure.util :refer [get-or-default]]
-            [docker-clojure.log :refer [log]]))
+            [docker-clojure.variant :as-alias variant]))
 
 (defn pull-image [image]
   (sh "docker" "pull" image))
@@ -109,7 +111,11 @@
          (tag {:omit-distro? true} variant)
          (tag {:omit-distro? true, :omit-build-tool-version? true} variant)
          (tag {:omit-jdk? true, :omit-build-tool-version? true} variant)
-         (tag {:omit-jdk? true, :omit-distro? true
+         (tag {:omit-jdk?                true, :omit-distro? true
                :omit-build-tool-version? true} variant))
         vec
         sort)))
+
+(s/fdef all-tags
+  :args (s/cat :variant ::variant/variant)
+  :ret  (s/coll-of ::cfg/docker-tag))
