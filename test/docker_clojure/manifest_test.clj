@@ -1,5 +1,5 @@
 (ns docker-clojure.manifest-test
-  (:require [clojure.test :refer [deftest is are testing]]
+  (:require [clojure.test :refer [deftest is testing]]
             [docker-clojure.manifest :refer [variant->manifest]]))
 
 (deftest variant->manifest-test
