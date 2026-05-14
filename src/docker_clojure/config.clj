@@ -94,7 +94,7 @@
               :debian-slim/trixie-slim :debian/trixie}})
 
 (def architectures
-  #{"amd64" "arm64v8" "ppc64le" "riscv64" "s390x"})
+  #{"amd64" "arm64v8" "ppc64le" "s390x"})
 
 (def default-distros
   "The default distro to use for tags that don't specify one, keyed by jdk-version.
