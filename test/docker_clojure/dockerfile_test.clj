@@ -38,7 +38,7 @@
                          "leiningen vs. the ants"))))
   (testing "tools-deps variant includes tools-deps-specific contents"
     (with-redefs [tools-deps/contents (constantly
-                                        ["Tools Deps is not a build tool"])]
+                                       ["Tools Deps is not a build tool"])]
       (is (str/includes? (contents cfg/installer-hashes
                                    {:base-image-tag "base:foo"
                                     :distro         :distro/distro
