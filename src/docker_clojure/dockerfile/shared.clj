@@ -7,9 +7,9 @@
                    (butlast cmds)
                    cmds)]
     (concat base
-           (map #(str % " && \\")
-                commands)
-           (when end? [(last cmds)]))))
+            (map #(str % " && \\")
+                 commands)
+            (when end? [(last cmds)]))))
 
 (defn get-deps [type distro-deps distro]
   (some->> distro namespace keyword (get distro-deps) type))
@@ -68,7 +68,7 @@
   [{:keys [jdk-version]}]
   (if (>= jdk-version 16)
     (concat
-      ["COPY entrypoint /usr/local/bin/entrypoint"]
-      [""]
-      ["ENTRYPOINT [\"entrypoint\"]"])
+     ["COPY entrypoint /usr/local/bin/entrypoint"]
+     [""]
+     ["ENTRYPOINT [\"entrypoint\"]"])
     nil))

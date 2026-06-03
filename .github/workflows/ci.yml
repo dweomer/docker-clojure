@@ -19,3 +19,16 @@ jobs:
         git diff --exit-code
     - name: Run tests
       run: bb run test
+
+  format:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install cljfmt
+      uses: DeLaGuardo/setup-clojure@13.4
+      with:
+        cljfmt: latest
+    - uses: actions/checkout@v4
+    - name: Check formatting
+      run: cljfmt check src test bb.edn deps.edn tests.edn

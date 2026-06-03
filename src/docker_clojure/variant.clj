@@ -17,17 +17,17 @@
 
 (s/def ::variant
   (s/with-gen
-   ::variant-base
-   #(gen/fmap (fn [[v btv]]
-                (if (= ::core/all (:build-tool v))
-                  (-> v ; ::core/all implies docker tag "latest"
-                      (assoc :build-tool-version nil
-                             :build-tool-versions btv)
-                      (dissoc :distro :docker-tag :base-image-tag :base-image))
-                  v))
-              (gen/tuple (s/gen ::variant-base)
-                         (gen/map (s/gen ::cfg/specific-build-tool)
-                                  (s/gen ::cfg/specific-build-tool-version))))))
+    ::variant-base
+    #(gen/fmap (fn [[v btv]]
+                 (if (= ::core/all (:build-tool v))
+                   (-> v ; ::core/all implies docker tag "latest"
+                       (assoc :build-tool-version nil
+                              :build-tool-versions btv)
+                       (dissoc :distro :docker-tag :base-image-tag :base-image))
+                   v))
+               (gen/tuple (s/gen ::variant-base)
+                          (gen/map (s/gen ::cfg/specific-build-tool)
+                                   (s/gen ::cfg/specific-build-tool-version))))))
 
 (s/def ::variants (s/coll-of ::variant))
 
@@ -153,7 +153,7 @@
           (if-let [matching
                    (some #(when
                            (equal-except-architecture? v %)
-                           %)
+                            %)
                          mav)]
             (-> mav
                 (->> (remove #(= % matching)))
@@ -170,16 +170,16 @@
   :args (s/cat :default-architectures ::cfg/architectures
                :variants
                (s/with-gen
-                ::variants
-                #(gen/fmap
-                  (fn [variants]
+                 ::variants
+                 #(gen/fmap
+                   (fn [variants]
                     ;; duplicate variants for each architecture
-                    (mapcat (fn [variant]
-                              (map (fn [arch]
-                                     (assoc variant :architecture arch))
-                                   cfg/architectures))
-                            variants))
-                  (s/gen (s/coll-of ::variant)))))
+                     (mapcat (fn [variant]
+                               (map (fn [arch]
+                                      (assoc variant :architecture arch))
+                                    cfg/architectures))
+                             variants))
+                   (s/gen (s/coll-of ::variant)))))
   :ret  (s/coll-of ::manifest-variant)
   :fn   #(let [ret-count        (-> % :ret count)
                arg-variants     (-> % :args :variants)

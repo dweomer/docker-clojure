@@ -21,19 +21,19 @@
 
 (defn all-contents [installer-hashes variant]
   (concat
-    ["" "### INSTALL LEIN ###"]
-    (lein/install
-      installer-hashes
-      (assoc variant :build-tool-version
-             (get-in variant [:build-tool-versions "lein"])))
-    ["" "### INSTALL TOOLS-DEPS ###"]
-    (tools-deps/install
-      installer-hashes
-     (assoc variant :build-tool-version
-            (get-in variant [:build-tool-versions "tools-deps"])))
-    [""]
-    (entrypoint variant)
-    ["" "CMD [\"-M\", \"--repl\"]"]))
+   ["" "### INSTALL LEIN ###"]
+   (lein/install
+    installer-hashes
+    (assoc variant :build-tool-version
+           (get-in variant [:build-tool-versions "lein"])))
+   ["" "### INSTALL TOOLS-DEPS ###"]
+   (tools-deps/install
+    installer-hashes
+    (assoc variant :build-tool-version
+           (get-in variant [:build-tool-versions "tools-deps"])))
+   [""]
+   (entrypoint variant)
+   ["" "CMD [\"-M\", \"--repl\"]"]))
 
 (defn copy-java-from-temurin-contents
   [{:keys [jdk-version] :as _variant}]
@@ -86,8 +86,8 @@
     (log "Generating" (str build-dir "/" filename))
     (write-file build-dir filename installer-hashes variant)
     (assoc variant
-      :build-dir build-dir
-      :dockerfile filename)))
+           :build-dir build-dir
+           :dockerfile filename)))
 
 (defn clean-all []
   (sh "sh" "-c" "rm -rf target/*"))

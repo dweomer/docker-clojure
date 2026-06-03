@@ -20,7 +20,7 @@
               :maintainer         "Paul Lam <paul@quantisan.com> & Wes Morgan <wesmorgan@icloud.com>"
               :architecture       "i386"}
              (->map '("eclipse-temurin" 8 :distro/distro
-                      ["build-tool" "1.2.3"] "i386"))))
+                                        ["build-tool" "1.2.3"] "i386"))))
 
       (is (= {:jdk-version        22
               :base-image         "debian"
@@ -32,7 +32,7 @@
               :maintainer         "Paul Lam <paul@quantisan.com> & Wes Morgan <wesmorgan@icloud.com>"
               :architecture       "arm64"}
              (->map '("debian" 22 :debian/bookworm
-                      ["tools-deps" "1.12.0.1530"] "arm64"))))
+                               ["tools-deps" "1.12.0.1530"] "arm64"))))
 
       (is (= {:jdk-version         22
               :base-image          "debian"
@@ -45,7 +45,7 @@
               :maintainer          "Paul Lam <paul@quantisan.com> & Wes Morgan <wesmorgan@icloud.com>"
               :architecture        "arm64"}
              (->map '("debian" 22 :debian/bookworm
-                      [::core/all] "arm64")))))))
+                               [::core/all] "arm64")))))))
 
 (deftest exclude?-test
   (testing "gets excluded if contains every key-value pair in exclusion"

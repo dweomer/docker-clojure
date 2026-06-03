@@ -38,13 +38,13 @@
          "RUN \\"]
         (concat-commands install-dep-cmds)
         (concat-commands
-          ["curl -fsSLO https://download.clojure.org/install/linux-install-$CLOJURE_VERSION.sh"
-           "sha256sum linux-install-$CLOJURE_VERSION.sh"
-           (str "echo \"" (get-in installer-hashes ["tools-deps" build-tool-version]) " *linux-install-$CLOJURE_VERSION.sh\" | sha256sum -c -")
-           "chmod +x linux-install-$CLOJURE_VERSION.sh"
-           "./linux-install-$CLOJURE_VERSION.sh"
-           "rm linux-install-$CLOJURE_VERSION.sh"
-           "clojure -e \"(clojure-version)\""] (empty? uninstall-dep-cmds))
+         ["curl -fsSLO https://download.clojure.org/install/linux-install-$CLOJURE_VERSION.sh"
+          "sha256sum linux-install-$CLOJURE_VERSION.sh"
+          (str "echo \"" (get-in installer-hashes ["tools-deps" build-tool-version]) " *linux-install-$CLOJURE_VERSION.sh\" | sha256sum -c -")
+          "chmod +x linux-install-$CLOJURE_VERSION.sh"
+          "./linux-install-$CLOJURE_VERSION.sh"
+          "rm linux-install-$CLOJURE_VERSION.sh"
+          "clojure -e \"(clojure-version)\""] (empty? uninstall-dep-cmds))
         (concat-commands uninstall-dep-cmds :end)
         (concat [""] docker-bug-notice
                 ["COPY rlwrap.retry /usr/local/bin/rlwrap"])
