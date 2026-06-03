@@ -60,12 +60,6 @@ jobs:
           path: official-images
       - name: Copy manifest into official-images library
         run: cp docker.manifest official-images/library/clojure
-      - name: Get user email
-        id: email
-        uses: evvanErb/get-github-email-by-username-action@v2.0
-        with:
-          github-username: ${{ github.actor }}
-          token: ${{ secrets.API_TOKEN_GITHUB }}
       - name: Open official-images pull request
         uses: peter-evans/create-pull-request@v8
         with:
@@ -73,7 +67,7 @@ jobs:
           path: official-images
           commit-message: 'Update clojure'
           committer: GitHub Actions <noreply@github.com>
-          author: ${{ github.actor }} <${{ steps.email.outputs.email }}>
+          author: ${{ github.actor }} <${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com>
           branch: automated-clojure-update
           push-to-fork: Quantisan/official-images
           title: Update clojure
