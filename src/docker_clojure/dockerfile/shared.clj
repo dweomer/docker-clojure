@@ -1,15 +1,18 @@
 (ns docker-clojure.dockerfile.shared
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [selmer.parser :as selmer]
+            [selmer.util :as selmer-util]))
 
-(defn concat-commands [base cmds & [end?]]
-  (let [commands (if end?
-                   (butlast cmds)
-                   cmds)]
-    (concat base
-            (map #(str % " && \\")
-                 commands)
-            (when end? [(last cmds)]))))
+;; Dockerfiles aren't HTML, so don't let Selmer escape any of the values we
+;; interpolate (quotes, brackets, etc. must pass through verbatim).
+(selmer-util/turn-off-escaping!)
+
+(defn render-template
+  "Render the Selmer template at resource path `tmpl` with `context`, trimming
+  any trailing newline so callers control the surrounding whitespace."
+  [tmpl context]
+  (-> tmpl io/resource slurp (selmer/render context) str/trim-newline))
 
 (defn get-deps [type distro-deps distro]
   (some->> distro namespace keyword (get distro-deps) type))
@@ -61,14 +64,3 @@
          dest (io/file build-dir filename)]
      (->> src slurp contents-processor (spit dest))
      (file-processor dest))))
-
-(defn entrypoint
-  "This is the same for every build-tool so far, so it's in here. If that
-  changes move it into the build-tool-specific namespaces (or future protocol)."
-  [{:keys [jdk-version]}]
-  (if (>= jdk-version 16)
-    (concat
-     ["COPY entrypoint /usr/local/bin/entrypoint"]
-     [""]
-     ["ENTRYPOINT [\"entrypoint\"]"])
-    nil))

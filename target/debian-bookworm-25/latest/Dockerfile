@@ -70,5 +70,4 @@ COPY rlwrap.retry /usr/local/bin/rlwrap
 COPY entrypoint /usr/local/bin/entrypoint
 
 ENTRYPOINT ["entrypoint"]
-
 CMD ["-M", "--repl"]

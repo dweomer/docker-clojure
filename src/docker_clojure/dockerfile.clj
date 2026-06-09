@@ -4,7 +4,7 @@
    [clojure.string :as str]
    [docker-clojure.dockerfile.lein :as lein]
    [docker-clojure.dockerfile.tools-deps :as tools-deps]
-   [docker-clojure.dockerfile.shared :refer [copy-resource-file! entrypoint]]
+   [docker-clojure.dockerfile.shared :refer [copy-resource-file! render-template]]
    [docker-clojure.log :refer [log]]))
 
 (defn build-dir [{:keys [base-image-tag jdk-version build-tool]}]
@@ -19,40 +19,55 @@
 (defn all-prereqs [dir variant]
   (tools-deps/prereqs dir variant))
 
-(defn all-contents [installer-hashes variant]
-  (concat
-   ["" "### INSTALL LEIN ###"]
-   (lein/install
-    installer-hashes
-    (assoc variant :build-tool-version
-           (get-in variant [:build-tool-versions "lein"])))
-   ["" "### INSTALL TOOLS-DEPS ###"]
-   (tools-deps/install
-    installer-hashes
-    (assoc variant :build-tool-version
-           (get-in variant [:build-tool-versions "tools-deps"])))
-   [""]
-   (entrypoint variant)
-   ["" "CMD [\"-M\", \"--repl\"]"]))
+(defn copy-java?
+  "Debian variants copy the JDK in from an eclipse-temurin image; the temurin
+  base images already have it."
+  [{:keys [distro]}]
+  (contains? #{:debian :debian-slim} (-> distro namespace keyword)))
 
-(defn copy-java-from-temurin-contents
-  [{:keys [jdk-version] :as _variant}]
-  ["ENV JAVA_HOME=/opt/java/openjdk"
-   (str "COPY --from=eclipse-temurin:" jdk-version " $JAVA_HOME $JAVA_HOME")
-   "ENV PATH=\"${JAVA_HOME}/bin:${PATH}\""
-   ""])
+(defn entrypoint?
+  "JDK 16+ ships a `repl` so we install our wrapper entrypoint for it."
+  [{:keys [jdk-version]}]
+  (>= jdk-version 16))
 
-(defn contents [installer-hashes {:keys [build-tool distro] :as variant}]
-  (str/join "\n"
-            (concat [(format "FROM %s" (:base-image-tag variant))
-                     ""]
-                    (case (-> distro namespace keyword)
-                      (:debian :debian-slim) (copy-java-from-temurin-contents variant)
-                      [])
-                    (case build-tool
-                      :docker-clojure.core/all (all-contents installer-hashes variant)
-                      "lein" (lein/contents installer-hashes variant)
-                      "tools-deps" (tools-deps/contents installer-hashes variant)))))
+(defn for-build-tool
+  "Return `variant` with `:build-tool-version` set to the given tool's version.
+  Single-build-tool variants already carry it; the combined `latest` image
+  pulls each tool's version from `:build-tool-versions`."
+  [variant build-tool]
+  (cond-> variant
+    (nil? (:build-tool-version variant))
+    (assoc :build-tool-version (get-in variant [:build-tool-versions build-tool]))))
+
+(defn body
+  "The build-tool install section(s) that go between the base image setup and
+  the entrypoint. The combined `latest` image stacks both behind headers."
+  [installer-hashes {:keys [build-tool] :as variant}]
+  (case build-tool
+    "lein"       (lein/install installer-hashes variant)
+    "tools-deps" (tools-deps/install installer-hashes variant)
+    :docker-clojure.core/all
+    (str "\n### INSTALL LEIN ###\n"
+         (lein/install installer-hashes (for-build-tool variant "lein"))
+         "\n\n### INSTALL TOOLS-DEPS ###\n"
+         (tools-deps/install installer-hashes (for-build-tool variant "tools-deps")))))
+
+(defn command
+  [{:keys [build-tool] :as variant}]
+  (case build-tool
+    "lein"                   (lein/command variant)
+    "tools-deps"             (tools-deps/command variant)
+    :docker-clojure.core/all "CMD [\"-M\", \"--repl\"]"))
+
+(defn contents [installer-hashes variant]
+  (render-template
+   "templates/Dockerfile.tmpl"
+   {:from        (:base-image-tag variant)
+    :copy-java   (copy-java? variant)
+    :jdk-version (:jdk-version variant)
+    :body        (body installer-hashes variant)
+    :entrypoint  (entrypoint? variant)
+    :cmd         (command variant)}))
 
 (defn shared-prereqs [dir {:keys [build-tool]}]
   (let [entrypoint (case build-tool
