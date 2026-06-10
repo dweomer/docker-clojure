@@ -29,19 +29,21 @@
                                        :jdk-version    11})
                             "LABEL "))))
   (testing "lein variant includes lein-specific contents"
-    (with-redefs [lein/contents (constantly ["leiningen vs. the ants"])]
+    (with-redefs [lein/install (constantly "leiningen vs. the ants")]
       (is (str/includes? (contents cfg/installer-hashes
                                    {:base-image-tag "base:foo"
                                     :distro         :distro/distro
                                     :build-tool     "lein"
-                                    :maintainer     "Me Myself"})
+                                    :maintainer     "Me Myself"
+                                    :jdk-version    11})
                          "leiningen vs. the ants"))))
   (testing "tools-deps variant includes tools-deps-specific contents"
-    (with-redefs [tools-deps/contents (constantly
-                                       ["Tools Deps is not a build tool"])]
+    (with-redefs [tools-deps/install (constantly
+                                      "Tools Deps is not a build tool")]
       (is (str/includes? (contents cfg/installer-hashes
                                    {:base-image-tag "base:foo"
                                     :distro         :distro/distro
                                     :build-tool     "tools-deps"
-                                    :maintainer     "Me Myself"})
+                                    :maintainer     "Me Myself"
+                                    :jdk-version    11})
                          "Tools Deps is not a build tool")))))

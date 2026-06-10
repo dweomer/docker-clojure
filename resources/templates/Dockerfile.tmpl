@@ -1,0 +1,12 @@
+FROM {{from}}
+
+{% if copy-java %}ENV JAVA_HOME=/opt/java/openjdk
+COPY --from=eclipse-temurin:{{jdk-version}} $JAVA_HOME $JAVA_HOME
+ENV PATH="${JAVA_HOME}/bin:${PATH}"
+
+{% endif %}{{body}}
+
+{% if entrypoint %}COPY entrypoint /usr/local/bin/entrypoint
+
+ENTRYPOINT ["entrypoint"]
+{% endif %}{{cmd}}
