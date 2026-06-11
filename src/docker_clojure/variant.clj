@@ -20,14 +20,17 @@
     ::variant-base
     #(gen/fmap (fn [[v btv]]
                  (if (= ::core/all (:build-tool v))
-                   (-> v ; ::core/all implies docker tag "latest"
-                       (assoc :build-tool-version nil
-                              :build-tool-versions btv)
-                       (dissoc :distro :docker-tag :base-image-tag :base-image))
+                   ;; The ::core/all ("latest") variant carries every build
+                   ;; tool's version instead of a single :build-tool-version.
+                   ;; (Don't dissoc the required keys — real ::all variants from
+                   ;; ->map keep them, and dropping them makes the generated
+                   ;; value violate ::variant-base, which starves spec's gensub
+                   ;; such-that filter.)
+                   (assoc v :build-tool-version nil
+                          :build-tool-versions btv)
                    v))
                (gen/tuple (s/gen ::variant-base)
-                          (gen/map (s/gen ::cfg/specific-build-tool)
-                                   (s/gen ::cfg/specific-build-tool-version))))))
+                          (s/gen ::cfg/build-tool-versions)))))
 
 (s/def ::variants (s/coll-of ::variant))
 
@@ -179,17 +182,22 @@
                                       (assoc variant :architecture arch))
                                     cfg/architectures))
                              variants))
-                   (s/gen (s/coll-of ::variant)))))
+                   ;; A handful of base variants is plenty to exercise the
+                   ;; merge, and keeping the collection small avoids amplifying
+                   ;; the rare per-variant generator starvation across a large
+                   ;; collection.
+                   (gen/vector (s/gen ::variant) 0 5))))
   :ret  (s/coll-of ::manifest-variant)
-  :fn   #(let [ret-count        (-> % :ret count)
-               arg-variants     (-> % :args :variants)
-               ;; Examine the return value to see how many unique variants we have
-               ;; after merging all architectures
-               variant-keys     (-> arg-variants first keys set
-                                    (disj :architecture))
-               unique-variants  (->> arg-variants
-                                     (map (fn [v] (select-keys v variant-keys)))
-                                     set count)]
-           ;; We expect to have one merged variant for each unique combination of keys
-           ;; other than architecture
+  :fn   #(let [ret-count       (-> % :ret count)
+               arg-variants    (-> % :args :variants)
+               ;; Count the variants that are unique once architecture is
+               ;; ignored. This mirrors `equal-except-architecture?`, which
+               ;; merges on the whole variant minus :architecture. (Deriving the
+               ;; key set from the first variant breaks for heterogeneous
+               ;; variants, e.g. when an ::all/latest variant — which carries
+               ;; :build-tool-versions — is mixed in with specific ones.)
+               unique-variants (->> arg-variants
+                                    (map (fn [v] (dissoc v :architecture)))
+                                    set count)]
+           ;; We expect one merged variant per unique non-architecture variant.
            (= ret-count unique-variants)))
