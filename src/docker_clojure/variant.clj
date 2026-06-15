@@ -119,14 +119,10 @@
        :else (compare v1 v2)))
    variants))
 
-(defn equal?
-  [v1 v2]
-  (= 0 (compare v1 v2)))
-
 (defn equal-except-architecture?
-  [{arch1 :architecture :as v1} {arch2 :architecture :as v2}]
-  (and (not= arch1 arch2)
-       (equal? (dissoc v1 :architecture) (dissoc v2 :architecture))))
+  [v1 v2]
+  (and (not= (:architecture v1) (:architecture v2))
+       (= (docker/full-tag v1) (docker/full-tag v2))))
 
 (defn combinations
   [base-images jdk-versions distros build-tools architectures]
@@ -188,16 +184,13 @@
                    ;; collection.
                    (gen/vector (s/gen ::variant) 0 5))))
   :ret  (s/coll-of ::manifest-variant)
-  :fn   #(let [ret-count       (-> % :ret count)
-               arg-variants    (-> % :args :variants)
-               ;; Count the variants that are unique once architecture is
-               ;; ignored. This mirrors `equal-except-architecture?`, which
-               ;; merges on the whole variant minus :architecture. (Deriving the
-               ;; key set from the first variant breaks for heterogeneous
-               ;; variants, e.g. when an ::all/latest variant — which carries
-               ;; :build-tool-versions — is mixed in with specific ones.)
-               unique-variants (->> arg-variants
-                                    (map (fn [v] (dissoc v :architecture)))
-                                    set count)]
-           ;; We expect one merged variant per unique non-architecture variant.
-           (= ret-count unique-variants)))
+  :fn   #(let [ret-count    (-> % :ret count)
+               arg-variants (-> % :args :variants)
+               ;; Count the distinct images, ignoring architecture, using the
+               ;; same `docker/full-tag` identity `equal-except-architecture?`
+               ;; merges on -- one source of truth for "same image except arch".
+               unique-images (->> arg-variants
+                                  (map docker/full-tag)
+                                  set count)]
+           ;; We expect one merged variant per distinct image.
+           (= ret-count unique-images)))
