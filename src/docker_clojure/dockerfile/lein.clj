@@ -30,10 +30,24 @@
 ;; Leiningen release tags are signed with this key (Phil Hagelberg).
 (def ^:const signing-key "9D13D9426A0814B3373CF5E3D8A8243577A7859F")
 
+;; The commit each release tag is expected to point at. After cloning we assert
+;; HEAD matches, so a moved or re-pointed upstream tag can't slip a different
+;; commit past us (belt-and-suspenders with `git verify-tag`). Requested by the
+;; docker-library/official-images maintainers.
+(def release-commits
+  {"2.13.0" "d703e4802feb3e5c3fa9ae9f1874fb7a3a3e3030"})
+
+(defn release-commit [version]
+  (or (get release-commits version)
+      (throw (ex-info (str "No known Git commit for Leiningen " version
+                           "; add it to lein/release-commits before building.")
+                      {:lein-version version}))))
+
 (defn install [_installer-hashes {:keys [build-tool-version] :as variant}]
   (render-template
    "templates/lein.tmpl"
    {:lein-version    build-tool-version
+    :lein-commit     (release-commit build-tool-version)
     :clojure-version bundled-clojure-version
     :gpg-key         signing-key
     :install-deps    (install-deps variant)

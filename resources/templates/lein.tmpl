@@ -4,8 +4,8 @@ ENV LEIN_INSTALL=/usr/local/bin/
 WORKDIR /tmp
 
 # No standalone uberjar is published for this version, so build it from source.
-# Verify Leiningen's GPG-signed release tag, then bootstrap leiningen-core's
-# dependencies with Maven and run `lein uberjar`.
+# Verify Leiningen's GPG-signed release tag and pin the expected commit, then
+# bootstrap leiningen-core's dependencies with Maven and run `lein uberjar`.
 RUN set -eux; \
 {% for dep in install-deps %}{{dep}} && \
 {% endfor %}export GNUPGHOME="$(mktemp -d)" && \
@@ -15,6 +15,7 @@ gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys {{gpg-key}} && \
 git clone --depth 1 --branch $LEIN_VERSION https://codeberg.org/leiningen/leiningen.git && \
 cd leiningen && \
 git verify-tag $LEIN_VERSION && \
+[ "$(git rev-parse HEAD)" = "{{lein-commit}}" ] && \
 ( cd leiningen-core && mvn -B -q -DskipTests install && mvn -B -q dependency:build-classpath -Dmdep.outputFile=.lein-bootstrap ) && \
 bin/lein uberjar && \
 install -m 0644 target/leiningen-$LEIN_VERSION-standalone.jar /usr/share/java/leiningen-$LEIN_VERSION-standalone.jar && \
