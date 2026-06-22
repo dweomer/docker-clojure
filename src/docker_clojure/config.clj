@@ -6,10 +6,20 @@
             [docker-clojure.core :as-alias core]))
 
 (s/def ::non-blank-string
-  (s/and string? #(not (str/blank? %))))
+  (s/with-gen
+    (s/and string? #(not (str/blank? %)))
+    ;; Generate non-blank by construction (the default string generator yields
+    ;; "" at size 0, which the not-blank such-that can't satisfy), and with
+    ;; enough length/entropy that `:distinct true` collections of these (e.g.
+    ;; ::architectures) don't collide and starve their distinctness such-that.
+    #(gen'/string-from-regex #"[A-Za-z0-9]{8,32}")))
 
 (s/def ::jdk-version
-  (s/and pos-int? #(<= 8 %)))
+  (s/with-gen
+    (s/and pos-int? #(<= 8 %))
+    ;; Generate in-range by construction; the default pos-int generator yields
+    ;; values < 8 the >= 8 such-that can't satisfy at small sizes (flaky gen).
+    #(gen/choose 8 30)))
 (s/def ::jdk-versions (s/coll-of ::jdk-version :distinct true :into #{}))
 
 (s/def ::base-image ::non-blank-string)
@@ -48,7 +58,8 @@
 
 (s/def ::distros (s/coll-of ::distro :distinct true :into #{}))
 
-(s/def ::specific-build-tool #{"lein" "tools-deps"})
+(def specific-build-tools #{"lein" "tools-deps"})
+(s/def ::specific-build-tool specific-build-tools)
 (s/def ::build-tool (s/or ::specific-tool ::specific-build-tool
                           ::all-tools #{::core/all}))
 (s/def ::specific-build-tool-version
@@ -62,7 +73,14 @@
   (s/nilable ::specific-build-tool-version))
 
 (s/def ::build-tool-versions
-  (s/map-of ::specific-build-tool ::specific-build-tool-version))
+  (s/with-gen
+    (s/map-of ::specific-build-tool ::specific-build-tool-version)
+    ;; Build the map by construction rather than via gen/map over the tiny
+    ;; #{"lein" "tools-deps"} key domain, which occasionally targets >2 distinct
+    ;; keys and starves its such-that.
+    #(gen/fmap (fn [versions] (zipmap specific-build-tools versions))
+               (gen/vector (s/gen ::specific-build-tool-version)
+                           (count specific-build-tools)))))
 
 (s/def ::maintainers
   (s/coll-of ::non-blank-string :distinct true :into #{}))
